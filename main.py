@@ -1,16 +1,16 @@
-import logging
+﻿import logging
+import os
 from telegram import Update, ReplyKeyboardMarkup
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
-from flask import Flask
-from threading import Thread
-import os
+from flask import Flask, request
 
 # ========= BOT TOKEN =========
 BOT_TOKEN = "8535335337:AAGUIzGQ1mjMnNVXNaxf-G0Ry_JDU-W3WEw"
-if not BOT_TOKEN:
-    raise ValueError("BOT_TOKEN not found! Add it in PythonAnywhere environment variables.")
 
-WEBHOOK_URL = "https://AmirEhab.pythonanywhere.com"
+# ⚠️ غيّر ده لاسم حسابك على PythonAnywhere
+PYTHONANYWHERE_USERNAME = "AmirEhab"
+WEBHOOK_URL = f"https://{PYTHONANYWHERE_USERNAME}.pythonanywhere.com/{BOT_TOKEN}"
+
 # ========= LOGGING =========
 logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO
@@ -24,13 +24,12 @@ main_menu = [
     ["Academic"]
 ]
 
-# Know AIChE menu - 2 buttons per row, consistent styling with screenshots
 know_aiche_menu = [
     ["Who Are We?"],
     ["Our Vision", "Our Mission"],
-    ["AIChE’s Official Accounts on Social Media"],
-    ["AIChE’s Mega Events"],
-    ["AIChE’s Main Sponsor"],
+    ["AIChE''s Official Accounts on Social Media"],
+    ["AIChE''s Mega Events"],
+    ["AIChE''s Main Sponsor"],
     ["⬅️ Back", "🏠 Main Menu"]
 ]
 
@@ -107,15 +106,12 @@ FILE_IDS = {
 }
 
 SUBJECT_FILE_IDS = {
-    # === Level 1 ===
     "Introduction to Petroleum Refining":
     "BQACAgQAAxkBAAIDyWj6LZsAAe2QrQTY_z2R6rWTNCgwyAACuBsAArWs0VOP-RJ2LEIkazYE",
     "Fundamentals of Chemical Engineering":
     "BQACAgQAAxkBAAIDy2j6LzphWLCUV16D8CCyVw-4w5d7AAK6GwACtazRU9mz3a_ClI3pNgQ",
     "Organic Chemistry":
     "BQACAgQAAxkBAAIDzWj6MN3TgCodHYtFsLuEWcaazxEwAAK9GwACtazRUzl_L47oaJ9BNgQ",
-
-    # === Level 2 ===
     "Petroleum Refining Engineering 1":
     "BQACAgQAAxkBAAID0Wj6OWeqjdZdepJur5gVtVG_Om66AALUGwACtazRU0FrkAxKoOonNgQ",
     "Crude Oil Evaluation":
@@ -124,8 +120,6 @@ SUBJECT_FILE_IDS = {
     "BQACAgQAAxkBAAID02j6OcE4SnIW1luTGO0_XytuzvhBAALZGwACtazRU2ziCFv8B9_XNgQ",
     "Water Treatment":
     "BQACAgQAAxkBAAIDz2j6MgI0y-DngmZIn8U7kmV9uo-rAAK-GwACtazRU8oLdizZJY7tNgQ",
-
-    # === Level 3 - Semester 1 ===
     "Unit Operation 2":
     "BQACAgQAAxkBAAID22j6Vw02RCHVpAeCmsKAiBJzEMWlAALyGwACtazZU9FgKQ2_bbwiNgQ",
     "Reactions":
@@ -136,8 +130,6 @@ SUBJECT_FILE_IDS = {
     "BQACAgQAAxkBAAID4Wj6ZB9UjgABO9nfXD32GEJ8X9wMhgACoRwAArWs2VN0JR-TqlYZ3TYE",
     "Petrochemicals 1":
     "BQACAgQAAxkBAAID12j6UISYOEM-Y3yrPBBhmvIDhnOcAAJ7GwACtazZUz3sciWfXBFqNgQ",
-# ===================== FILE IDS =====================
-
     "Pollution Control": "BQACAgQAAxkBAAIEMGj6htGrVDyS1LGcpMRhCM40DC27AAIVHQACtazZU5vHYi6wWKCANgQ",
     "Process Control": "BQACAgQAAxkBAAIEMmj6h14gIRcBY398nrnf_BMMsOgFAAIaHQACtazZU2ppaLmqJ7OKNgQ",
     "Operation Research in Chemical Engineering": "BQACAgQAAxkBAAIENGj6iGMT4M5fekIvsjxHfgLDtPGWAAIdHQACtazZU778VI4cIV0ZNgQ",
@@ -156,7 +148,6 @@ SUBJECT_FILE_IDS = {
     "Furnace Design": "BQACAgQAAxkBAAIFzWj7SW9_Gn7eDYTYzhrJT5iiH5bNAAJUGAACBh_YUxW4yhPcKJBENgQ",
 }
 
-# === SUBJECT TELEGRAM CHANNEL LINKS ===
 SUBJECT_CHANNELS = {
     "Introduction to Petroleum Refining": "https://t.me/+BM7qUVxqCWkwM2I0",
     "Fundamentals of Chemical Engineering": "https://t.me/+kFWVMp6UBAs2Y2Q0",
@@ -188,8 +179,6 @@ SUBJECT_CHANNELS = {
     "Furnace Design": "https://t.me/+PsUmr6CLvAozMWNk"
 }
 
-
-# ========= IMAGE FILE IDs =========
 IMAGE_FILE_IDS = {
     "who_we_are": "AgACAgQAAxkBAANIaTaq-Cehe23FurX3GFxL2W0ksLQAAvcLaxuIRLFRib46A75ZLDoBAAMCAAN5AAM2BA",
     "our_vision": "AgACAgQAAxkBAANKaTarCVMF7tFP2n64wdtuhwXBKaMAAvgLaxuIRLFRzc1h6-IWJOcBAAMCAAN5AAM2BA",
@@ -200,24 +189,27 @@ IMAGE_FILE_IDS = {
     "sponsor": "AgACAgQAAxkBAANMaTarVTZt0lSfdnHziXmFVe05Tm0AAvkLaxuIRLFRC7g3mpsf9bEBAAMCAAN5AAM2BA",
 }
 
+# ========= FLASK APP =========
+flask_app = Flask(__name__)
 
-# ========= START HANDLER =========
+# ========= BOT APPLICATION =========
+bot_app = Application.builder().token(BOT_TOKEN).build()
+
+# ========= HELPERS =========
 def escape_markdown(text: str) -> str:
     escape_chars = r"_*[]()~`>#+-=|{}.!"
     for char in escape_chars:
         text = text.replace(char, f"\\{char}")
     return text
 
+# ========= HANDLERS =========
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
         "Welcome to AIChE Suez Chapter Bot! 👋\nPlease choose an option below:",
         reply_markup=ReplyKeyboardMarkup(main_menu, resize_keyboard=True)
     )
 
-# ========= FILE ID LOGGER (optional for uploading new materials) =========
 async def handle_file(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    print("📸 File handler triggered!")  # Debug log
-
     if update.message.photo:
         file_id = update.message.photo[-1].file_id
         await update.message.reply_text(f"🖼️ Image file_id:\n{file_id}")
@@ -227,242 +219,113 @@ async def handle_file(update: Update, context: ContextTypes.DEFAULT_TYPE):
     else:
         await update.message.reply_text("⚠️ Unsupported file type.")
 
-
-# ========= MESSAGE HANDLER =========
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = update.message.text
 
-    # === MAIN MENU ===
     if text == "Know AIChE":
-        await update.message.reply_text(
-            "Learn more about AIChE 👇",
-            reply_markup=ReplyKeyboardMarkup(know_aiche_menu, resize_keyboard=True)
-        )
-
+        await update.message.reply_text("Learn more about AIChE 👇", reply_markup=ReplyKeyboardMarkup(know_aiche_menu, resize_keyboard=True))
     elif text == "AIChE Technical Products":
-        await update.message.reply_text(
-            "Explore AIChE Technical Products 👇",
-            reply_markup=ReplyKeyboardMarkup(tech_products_menu, resize_keyboard=True)
-        )
-
+        await update.message.reply_text("Explore AIChE Technical Products 👇", reply_markup=ReplyKeyboardMarkup(tech_products_menu, resize_keyboard=True))
     elif text == "Academic":
-        await update.message.reply_text(
-            "Choose your academic level 👇",
-            reply_markup=ReplyKeyboardMarkup(academic_levels_menu, resize_keyboard=True)
-        )
-
-    # === KNOW AIChE SUBOPTIONS ===
+        await update.message.reply_text("Choose your academic level 👇", reply_markup=ReplyKeyboardMarkup(academic_levels_menu, resize_keyboard=True))
     elif text == "Who Are We?":
-        await update.message.reply_photo(
-            IMAGE_FILE_IDS["who_we_are"],
-            caption="🌐 *Who We Are*\nAIChE stands for 'American Institute of Chemical Engineers'. It is the world's leading organization for chemical engineering professionals. It's a nonprofit organization with more than 60,000 members from over 110 countries worldwide.\n\nAIChE, Suez University Student Chapter (AIChE SUSC) was founded in 2013 as a branch of AIChE International, and it includes a group of undergraduate students, dedicated to the advancement of academic learning techniques, and personal development systems, trying to create links between the university and the industry.",
-            parse_mode="Markdown"
-        )
-
+        await update.message.reply_photo(IMAGE_FILE_IDS["who_we_are"], caption="🌐 *Who We Are*\nAIChE stands for 'American Institute of Chemical Engineers'. It is the world's leading organization for chemical engineering professionals.", parse_mode="Markdown")
     elif text == "Our Mission":
-        await update.message.reply_text(
-            "🎯 *Our Mission*\nTo empower students with technical knowledge, leadership skills, and industrial exposure, preparing them to become future leaders in the energy and chemical industries.",parse_mode="Markdown"
-        )
-
+        await update.message.reply_text("🎯 *Our Mission*\nTo empower students with technical knowledge, leadership skills, and industrial exposure.", parse_mode="Markdown")
     elif text == "Our Vision":
-        await update.message.reply_photo(
-            IMAGE_FILE_IDS["our_vision"],
-            caption="🚀 *Reforming Spark*\nEvery Evolution Starts with a Spark, Imagine a place where every page you turn gives you a new experience , where You Can Kindle your Spark, and the adventure never ends. Our vision is to make this chapter everyone’s favorite place, Where They can kindle their passion, Performance and success, a story that resonates with your heart and soul. Dive in and let the magic unfold.",
-            parse_mode="Markdown"
-        )
-
-    elif text == "AIChE’s Official Accounts on Social Media":
-        links = (
-            "🌐 *Official AIChE Suez Links*\n\n"
-            "🔗 Website: [aichesusc.org](https://aichesusc.org/)\n"
-            "📘 Facebook: [AIChE Suez](https://www.facebook.com/AIChESUSC?mibextid=LQQJ4d)\n"
-            "💼 LinkedIn: [AIChE Suez Student Chapter](https://www.linkedin.com/company/aichesuez/)\n"
-            "📸 Instagram: [@aichesusc](https://instagram.com/aichesusc?igshid=MzRlODBiNWFlZA==)\n"
-            "🐦 Twitter (X): [@aichesusc](https://x.com/aichesusc?s=11&t=-PujelyHFI7v3Its5-ebIw)\n"
-            "💬 Telegram: [AIChE Suez Channel](https://t.me/AIChESUSC)\n"
-            "▶️ YouTube: [AIChE Suez Channel](https://youtube.com/@AIChESUSC1?si=JBZx0NBS8-Tjpl8V)\n"
-            "📱 Google Play: [AIChE App](https://play.google.com/store/apps/details?id=com.aiche.aiche)"
-        )
+        await update.message.reply_photo(IMAGE_FILE_IDS["our_vision"], caption="🚀 *Reforming Spark*\nEvery Evolution Starts with a Spark.", parse_mode="Markdown")
+    elif text == "AIChE''s Official Accounts on Social Media":
+        links = ("🌐 *Official AIChE Suez Links*\n\n"
+                 "🔗 Website: [aichesusc.org](https://aichesusc.org/)\n"
+                 "📘 Facebook: [AIChE Suez](https://www.facebook.com/AIChESUSC)\n"
+                 "💼 LinkedIn: [AIChE Suez Student Chapter](https://www.linkedin.com/company/aichesuez/)\n"
+                 "📸 Instagram: [@aichesusc](https://instagram.com/aichesusc)\n"
+                 "💬 Telegram: [AIChE Suez Channel](https://t.me/AIChESUSC)\n"
+                 "▶️ YouTube: [AIChE Suez Channel](https://youtube.com/@AIChESUSC1)")
         await update.message.reply_text(links, parse_mode="Markdown", disable_web_page_preview=True)
-
-    elif text == "AIChE’s Mega Events":
+    elif text == "AIChE''s Mega Events":
         events = [
-            (
-                IMAGE_FILE_IDS["PGIE"],
-                "🛢 *PGIE (Petroleum and Gas Industries in Egypt)*\n\n"
-                "A one-day technical exhibition and conference held annually at the Engineers Syndicate in Cairo, "
-                "organized by AIChE Suez. It features expert technical sessions and competitions.\n\n"
-                "🔗 [Event Link](https://facebook.com/events/s/pgie-conference-and-exhibition/367320702189631/)"
-            ),
-            (
-                IMAGE_FILE_IDS["AIChE Refining Diploma"],
-                "🎓 *AIChE Refining Diploma*\n\n"
-                "An online 70+ hour diploma presented by AIChE Suez, including over 10 courses related to the oil and gas industry, "
-                "covering Crude Oil Processing, Gas Processing, Petrochemicals, P&ID, Fertilizers, and more.\n\n"
-                "🔗 [Event Link](https://facebook.com/events/s/aiche-refining-diploma-ix/1485937229407154/)"
-            ),
-            (
-                IMAGE_FILE_IDS["Brain++"],
-                "🧠 *Brain++*\n\n"
-                "A two-day mega non-technical event held at FUE in March. "
-                "It features workshops and competitions on Digital Marketing, HR, IoT, PR, and soft skills, "
-                "delivered by more than 30 professional speakers.\n\n"
-                "🔗 [Event Link](https://facebook.com/events/s/brain-3-get-your-brain-program/2013346112448215/)"
-            ),
-            (
-                IMAGE_FILE_IDS["Career Fair"],
-                "💼 *Visual Intelligence*\n\n"
-                "An online event covering multiple career paths and topics like Data analysis, Digital Marketing, Graphic Design, "
-                "Entrepreneurship, and more — helping students explore and develop essential skills.\n\n"
-                "🔗 [Event Link](https://facebook.com/events/s/visual-intelligence-vi/1610487736238021/)"
-            ),
+            (IMAGE_FILE_IDS["PGIE"], "🛢 *PGIE*\nA one-day technical exhibition and conference held annually."),
+            (IMAGE_FILE_IDS["AIChE Refining Diploma"], "🎓 *AIChE Refining Diploma*\nAn online 70+ hour diploma."),
+            (IMAGE_FILE_IDS["Brain++"], "🧠 *Brain++*\nA two-day mega non-technical event."),
+            (IMAGE_FILE_IDS["Career Fair"], "💼 *Visual Intelligence*\nAn online event covering multiple career paths."),
         ]
-
         for file_id, caption in events:
             await update.message.reply_photo(photo=file_id, caption=caption, parse_mode="Markdown")
-
-
-    elif text == "AIChE’s Main Sponsor":
-        await update.message.reply_photo(
-            IMAGE_FILE_IDS["sponsor"],
-            caption="💼 *Our Sponsor*\nBGS Energy Services offers a wide range of onshore and offshore services for our Customers in the Oil and Gas industry maximizing the value of the reservoir throughout various stages of its lifecycle. With a highly experienced, well-trained global network of personnel, and innovative, state-of-the-art proprieta technologies, BGS Energy Services is well-equipped to meet all the requirements of the Geology and Geophysics (G&G), Drilling, Pipeline and Process Services (PPS) and Engineering/Business developmen services within industry and energy markets worldwide - both safely and efficiently.",
-            parse_mode="Markdown"
-        )
-
-    # === TECHNICAL PRODUCTS ===
+    elif text == "AIChE''s Main Sponsor":
+        await update.message.reply_photo(IMAGE_FILE_IDS["sponsor"], caption="💼 *Our Sponsor*\nBGS Energy Services.", parse_mode="Markdown")
     elif text == "ATB":
-        await update.message.reply_document(
-            document="BQACAgQAAxkBAAMjaTam9YikGMM0dYXRPR1eCY6U160AAvYYAAKIRLFR2CJE1_8Eqf42BA"
-        )
-
-    # --- AIChE Capsules ---
+        await update.message.reply_document(document="BQACAgQAAxkBAAMjaTam9YikGMM0dYXRPR1eCY6U160AAvYYAAKIRLFR2CJE1_8Eqf42BA")
     elif text == "Capsules":
-        await update.message.reply_document(
-            document="BQACAgQAAxkBAAMlaTanQJ7NRWXqmBsqxt8uG3ZK1sUAAvcYAAKIRLFRFYfotpYLFjE2BA"
-        )
-
-        await update.message.reply_document(
-            document="BQACAgQAAxkBAAMnaTanijVnKGiX2tTahK-QrE07JdoAAvgYAAKIRLFRIGeummQ3f382BA"
-        )
-
-        # --- Spark Magazine ---
+        await update.message.reply_document(document="BQACAgQAAxkBAAMlaTanQJ7NRWXqmBsqxt8uG3ZK1sUAAvcYAAKIRLFRFYfotpYLFjE2BA")
+        await update.message.reply_document(document="BQACAgQAAxkBAAMnaTanijVnKGiX2tTahK-QrE07JdoAAvgYAAKIRLFRIGeummQ3f382BA")
     elif text == "Spark":
-    # Send previous issues (links)
-        spark_links = (
-            "📚 *Spark Magazine Issues:*\n"
-            "• [SPARK Magazine 9](https://aichesusc.org/articles/15)\n"
-            "• [SPARK Magazine 8](https://aichesusc.org/articles/6)\n"
-            "• [SPARK Magazine 7](https://aichesusc.org/articles/8)\n"
-            "• [SPARK Magazine 6](https://aichesusc.org/articles/1)\n"
-            "• [SPARK Magazine 5](https://aichesusc.org/articles/2)\n"
-            "• [SPARK Magazine 4](https://aichesusc.org/articles/3)\n"
-            "• [SPARK Magazine 3](https://aichesusc.org/articles/4)\n"
-            "• [SPARK Magazine 2](https://aichesusc.org/articles/5)"
-        )
-
+        spark_links = ("📚 *Spark Magazine Issues:*\n"
+                       "• [SPARK Magazine 9](https://aichesusc.org/articles/15)\n"
+                       "• [SPARK Magazine 8](https://aichesusc.org/articles/6)\n"
+                       "• [SPARK Magazine 7](https://aichesusc.org/articles/8)\n"
+                       "• [SPARK Magazine 6](https://aichesusc.org/articles/1)")
         await update.message.reply_text(spark_links, parse_mode="Markdown")
-
     elif text == "Library":
-        await update.message.reply_text(
-            "📚 Access our digital library:\n👉 https://drive.google.com/drive/folders/1xjaS-ok3c37gqg5Jq_IbYbOugASO_qCF"
-        )
-
-    # === ACADEMIC ===
+        await update.message.reply_text("📚 Access our digital library:\n👉 https://drive.google.com/drive/folders/1xjaS-ok3c37gqg5Jq_IbYbOugASO_qCF")
     elif text in ["Level 1", "Level 2", "Level 3", "Level 4"]:
         context.user_data["level"] = text
         if text in ["Level 1", "Level 2"]:
             subs = subjects[text]
             sub_menu = [[s] for s in subs] + [["⬅️ Back", "🏠 Main Menu"]]
-            await update.message.reply_text(
-                f"{text} subjects 👇",
-                reply_markup=ReplyKeyboardMarkup(sub_menu, resize_keyboard=True)
-            )
+            await update.message.reply_text(f"{text} subjects 👇", reply_markup=ReplyKeyboardMarkup(sub_menu, resize_keyboard=True))
         else:
-            await update.message.reply_text(
-                f"You selected {text}. Choose a semester 👇",
-                reply_markup=ReplyKeyboardMarkup(semester_menu, resize_keyboard=True)
-            )
-
+            await update.message.reply_text(f"You selected {text}. Choose a semester 👇", reply_markup=ReplyKeyboardMarkup(semester_menu, resize_keyboard=True))
     elif text in ["Semester 1", "Semester 2"]:
         level = context.user_data.get("level")
         context.user_data["semester"] = text
         key = f"{level} - {text}"
         subs = subjects.get(key, [])
         sub_menu = [[s] for s in subs] + [["⬅️ Back", "🏠 Main Menu"]]
-        await update.message.reply_text(
-            f"{key} subjects 👇",
-            reply_markup=ReplyKeyboardMarkup(sub_menu, resize_keyboard=True)
-        )
-
+        await update.message.reply_text(f"{key} subjects 👇", reply_markup=ReplyKeyboardMarkup(sub_menu, resize_keyboard=True))
     elif any(text in sublist for sublist in subjects.values()):
         if text in SUBJECT_FILE_IDS:
-
-
-            # Send Telegram channel link (if available)
             channel_link = SUBJECT_CHANNELS[text]
             safe_link = escape_markdown(channel_link)
-            await update.message.reply_text(
-                f"📢 *Join the Telegram Channel for {escape_markdown(text)}:*\n👉 {safe_link}",
-                parse_mode="MarkdownV2",
-                disable_web_page_preview=True
-            )
+            await update.message.reply_text(f"📢 *Join the Telegram Channel for {escape_markdown(text)}:*\n👉 {safe_link}", parse_mode="MarkdownV2", disable_web_page_preview=True)
         else:
-            await update.message.reply_text(
-                f"⚠️ Sorry, material for *{text}* not found or not uploaded yet.",
-                parse_mode="Markdown"
-            )
-
-    # === NAVIGATION ===
+            await update.message.reply_text(f"⚠️ Sorry, material for *{text}* not found yet.", parse_mode="Markdown")
     elif text == "⬅️ Back":
         if "semester" in context.user_data:
             context.user_data.pop("semester")
-            await update.message.reply_text(
-                "Choose a semester 👇",
-                reply_markup=ReplyKeyboardMarkup(semester_menu, resize_keyboard=True)
-            )
+            await update.message.reply_text("Choose a semester 👇", reply_markup=ReplyKeyboardMarkup(semester_menu, resize_keyboard=True))
         elif "level" in context.user_data:
             context.user_data.pop("level")
-            await update.message.reply_text(
-                "Choose your academic level 👇",
-                reply_markup=ReplyKeyboardMarkup(academic_levels_menu, resize_keyboard=True)
-            )
+            await update.message.reply_text("Choose your academic level 👇", reply_markup=ReplyKeyboardMarkup(academic_levels_menu, resize_keyboard=True))
         else:
-            await update.message.reply_text(
-                "Main menu 👇",
-                reply_markup=ReplyKeyboardMarkup(main_menu, resize_keyboard=True)
-            )
-
+            await update.message.reply_text("Main menu 👇", reply_markup=ReplyKeyboardMarkup(main_menu, resize_keyboard=True))
     elif text == "🏠 Main Menu":
         context.user_data.clear()
-        await update.message.reply_text(
-            "Main menu 👇",
-            reply_markup=ReplyKeyboardMarkup(main_menu, resize_keyboard=True)
-        )
-
+        await update.message.reply_text("Main menu 👇", reply_markup=ReplyKeyboardMarkup(main_menu, resize_keyboard=True))
     else:
         await update.message.reply_text("Please choose an option from the menu below.")
 
-# ========= FLASK KEEP-ALIVE SERVER =========
-flask_app = Flask('')
+# ========= REGISTER HANDLERS =========
+bot_app.add_handler(CommandHandler("start", start))
+bot_app.add_handler(MessageHandler(filters.Document.ALL | filters.PHOTO, handle_file))
+bot_app.add_handler(MessageHandler(filters.TEXT, handle_message))
 
-@flask_app.route('/')
+# ========= WEBHOOK ROUTE =========
+@flask_app.route(f"/{BOT_TOKEN}", methods=["POST"])
+async def webhook():
+    import json
+    data = request.get_json(force=True)
+    update = Update.de_json(data, bot_app.bot)
+    await bot_app.initialize()
+    await bot_app.process_update(update)
+    return "OK", 200
+
+@flask_app.route("/")
 def home():
-    return "AIChE Suez Chapter Bot is running successfully on PythonAnywhere!"
+    return "AIChE Suez Chapter Bot is running! ✅"
 
-def run_flask():
-    flask_app.run(host='0.0.0.0', port=8080)
-
-# ========= RUN BOT =========
-def main():
-    Thread(target=run_flask, daemon=True).start()
-    bot_app = Application.builder().token(BOT_TOKEN).build()
-
-    bot_app.add_handler(CommandHandler("start", start))
-    bot_app.add_handler(MessageHandler(filters.Document.ALL | filters.PHOTO, handle_file))
-    bot_app.add_handler(MessageHandler(filters.TEXT, handle_message))
-
-    logger.info("Bot started successfully!")
-    bot_app.run_polling()
-
-if __name__ == "__main__":
-    main()
+# ========= SET WEBHOOK ROUTE =========
+@flask_app.route("/set_webhook")
+async def set_webhook():
+    await bot_app.bot.set_webhook(url=WEBHOOK_URL)
+    return f"Webhook set to: {WEBHOOK_URL}"
