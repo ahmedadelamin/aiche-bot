@@ -193,6 +193,7 @@ async def handle_file(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    save_user(update.effective_user.id)
     text = update.message.text
     if text == "Know AIChE":
         await update.message.reply_text("Learn more about AIChE 👇", reply_markup=ReplyKeyboardMarkup(know_aiche_menu, resize_keyboard=True))
