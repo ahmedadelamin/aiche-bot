@@ -1,6 +1,7 @@
-﻿import logging
+import logging
 import os
 import asyncio
+import json
 from telegram import Update, ReplyKeyboardMarkup
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
 from flask import Flask, request
@@ -9,9 +10,24 @@ from flask import Flask, request
 BOT_TOKEN = os.environ.get("BOT_TOKEN", "")
 PYTHONANYWHERE_USERNAME = os.environ.get("PA_USERNAME", "AmirEhab")
 WEBHOOK_URL = f"https://{PYTHONANYWHERE_USERNAME}.pythonanywhere.com/{BOT_TOKEN}"
+ADMIN_ID = 1846962771
+USERS_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "users.json")
 
 logging.basicConfig(format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+# ========= USER STORAGE =========
+def load_users():
+    if os.path.exists(USERS_FILE):
+        with open(USERS_FILE, "r") as f:
+            return set(json.load(f))
+    return set()
+
+def save_user(user_id):
+    users = load_users()
+    users.add(user_id)
+    with open(USERS_FILE, "w") as f:
+        json.dump(list(users), f)
 
 # ========= MENUS =========
 main_menu = [["Know AIChE"], ["AIChE Technical Products"], ["Academic"]]
@@ -109,13 +125,44 @@ def escape_markdown(text):
 
 # ========= HANDLERS =========
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_id = update.effective_user.id
+    save_user(user_id)
     await update.message.reply_text("Welcome to AIChE Suez Chapter Bot! 👋\nPlease choose an option below:", reply_markup=ReplyKeyboardMarkup(main_menu, resize_keyboard=True))
 
+async def broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_id = update.effective_user.id
+    if user_id != ADMIN_ID:
+        await update.message.reply_text("❌ مش مسموح لك بالأمر ده!")
+        return
+    if not context.args:
+        await update.message.reply_text("📢 استخدام الأمر:\n/broadcast الرسالة اللي عايز تبعتها")
+        return
+    message = " ".join(context.args)
+    users = load_users()
+    success, failed = 0, 0
+    status_msg = await update.message.reply_text(f"⏳ جاري الإرسال لـ {len(users)} مستخدم...")
+    for uid in users:
+        try:
+            await context.bot.send_message(chat_id=uid, text=f"📢 *رسالة من AIChE Suez:*\n\n{message}", parse_mode="Markdown")
+            success += 1
+        except Exception:
+            failed += 1
+    await status_msg.edit_text(f"✅ تم الإرسال!\n\n👥 المستخدمين: {len(users)}\n✅ وصل: {success}\n❌ فشل: {failed}")
+
+async def users_count(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if update.effective_user.id != ADMIN_ID:
+        await update.message.reply_text("❌ مش مسموح لك!")
+        return
+    users = load_users()
+    await update.message.reply_text(f"👥 عدد المستخدمين: {len(users)}")
+
 async def handle_file(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    save_user(update.effective_user.id)
     if update.message.photo:
         await update.message.reply_text(f"🖼️ Image file_id:\n{update.message.photo[-1].file_id}")
     elif update.message.document:
         await update.message.reply_text(f"📄 Document file_id:\n{update.message.document.file_id}")
+
 
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = update.message.text
@@ -193,6 +240,8 @@ def make_app():
     """Create a fresh Application instance for each request"""
     app = Application.builder().token(BOT_TOKEN).build()
     app.add_handler(CommandHandler("start", start))
+    app.add_handler(CommandHandler("broadcast", broadcast))
+    app.add_handler(CommandHandler("users", users_count))
     app.add_handler(MessageHandler(filters.Document.ALL | filters.PHOTO, handle_file))
     app.add_handler(MessageHandler(filters.TEXT, handle_message))
     return app
