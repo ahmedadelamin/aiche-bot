@@ -1,12 +1,11 @@
 ﻿import logging
 import os
 import asyncio
-import json
 from telegram import Update, ReplyKeyboardMarkup
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
 from flask import Flask, request
 
-# ========= BOT TOKEN =========
+# ========= CONFIG =========
 BOT_TOKEN = os.environ.get("BOT_TOKEN", "")
 PYTHONANYWHERE_USERNAME = os.environ.get("PA_USERNAME", "AmirEhab")
 WEBHOOK_URL = f"https://{PYTHONANYWHERE_USERNAME}.pythonanywhere.com/{BOT_TOKEN}"
@@ -102,7 +101,6 @@ IMAGE_FILE_IDS = {
     "sponsor": "AgACAgQAAxkBAANMaTarVTZt0lSfdnHziXmFVe05Tm0AAvkLaxuIRLFRC7g3mpsf9bEBAAMCAAN5AAM2BA",
 }
 
-# ========= HELPERS =========
 def escape_markdown(text):
     escape_chars = r"_*[]()~`>#+-=|{}.!"
     for char in escape_chars:
@@ -128,13 +126,13 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     elif text == "Academic":
         await update.message.reply_text("Choose your academic level 👇", reply_markup=ReplyKeyboardMarkup(academic_levels_menu, resize_keyboard=True))
     elif text == "Who Are We?":
-        await update.message.reply_photo(IMAGE_FILE_IDS["who_we_are"], caption="🌐 *Who We Are*\nAIChE stands for American Institute of Chemical Engineers. World leading organization with 60,000+ members.", parse_mode="Markdown")
+        await update.message.reply_photo(IMAGE_FILE_IDS["who_we_are"], caption="🌐 *Who We Are*\nAIChE stands for American Institute of Chemical Engineers.", parse_mode="Markdown")
     elif text == "Our Mission":
-        await update.message.reply_text("🎯 *Our Mission*\nTo empower students with technical knowledge, leadership skills, and industrial exposure.", parse_mode="Markdown")
+        await update.message.reply_text("🎯 *Our Mission*\nTo empower students with technical knowledge and leadership skills.", parse_mode="Markdown")
     elif text == "Our Vision":
         await update.message.reply_photo(IMAGE_FILE_IDS["our_vision"], caption="🚀 *Reforming Spark*\nEvery Evolution Starts with a Spark.", parse_mode="Markdown")
     elif text == "AIChE''s Official Accounts on Social Media":
-        links = ("🌐 *Official AIChE Suez Links*\n\n🔗 Website: [aichesusc.org](https://aichesusc.org/)\n📘 Facebook: [AIChE Suez](https://www.facebook.com/AIChESUSC)\n💬 Telegram: [AIChE Suez Channel](https://t.me/AIChESUSC)\n▶️ YouTube: [AIChE Suez](https://youtube.com/@AIChESUSC1)")
+        links = ("🌐 *Official AIChE Suez Links*\n\n🔗 [Website](https://aichesusc.org/)\n📘 [Facebook](https://www.facebook.com/AIChESUSC)\n💬 [Telegram](https://t.me/AIChESUSC)\n▶️ [YouTube](https://youtube.com/@AIChESUSC1)")
         await update.message.reply_text(links, parse_mode="Markdown", disable_web_page_preview=True)
     elif text == "AIChE''s Mega Events":
         events = [(IMAGE_FILE_IDS["PGIE"], "🛢 *PGIE*\nA one-day technical exhibition held annually."), (IMAGE_FILE_IDS["AIChE Refining Diploma"], "🎓 *AIChE Refining Diploma*\nAn online 70+ hour diploma."), (IMAGE_FILE_IDS["Brain++"], "🧠 *Brain++*\nA two-day mega non-technical event."), (IMAGE_FILE_IDS["Career Fair"], "💼 *Visual Intelligence*\nOnline event covering multiple career paths.")]
@@ -188,36 +186,41 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     else:
         await update.message.reply_text("Please choose an option from the menu below.")
 
-# ========= BUILD APPLICATION =========
-bot_app = Application.builder().token(BOT_TOKEN).build()
-bot_app.add_handler(CommandHandler("start", start))
-bot_app.add_handler(MessageHandler(filters.Document.ALL | filters.PHOTO, handle_file))
-bot_app.add_handler(MessageHandler(filters.TEXT, handle_message))
-
 # ========= FLASK =========
 flask_app = Flask(__name__)
+
+def make_app():
+    """Create a fresh Application instance for each request"""
+    app = Application.builder().token(BOT_TOKEN).build()
+    app.add_handler(CommandHandler("start", start))
+    app.add_handler(MessageHandler(filters.Document.ALL | filters.PHOTO, handle_file))
+    app.add_handler(MessageHandler(filters.TEXT, handle_message))
+    return app
 
 @flask_app.route(f"/{BOT_TOKEN}", methods=["POST"])
 def webhook():
     data = request.get_json(force=True)
     async def process():
-        if not bot_app._initialized:
-            await bot_app.initialize()
-        update = Update.de_json(data, bot_app.bot)
-        await bot_app.process_update(update)
+        app = make_app()
+        await app.initialize()
+        update = Update.de_json(data, app.bot)
+        await app.process_update(update)
+        await app.shutdown()
     asyncio.run(process())
     return "OK", 200
 
 @flask_app.route("/set_webhook")
 def set_webhook():
     async def do_set():
-        await bot_app.bot.initialize()
-        await bot_app.bot.set_webhook(url=WEBHOOK_URL)
-        info = await bot_app.bot.get_webhook_info()
+        app = make_app()
+        await app.initialize()
+        await app.bot.set_webhook(url=WEBHOOK_URL)
+        info = await app.bot.get_webhook_info()
+        await app.shutdown()
         return info.url
     url = asyncio.run(do_set())
-    return f"✅ Webhook set successfully!<br>URL: {url}"
+    return f"✅ Webhook set!<br>URL: {url}"
 
 @flask_app.route("/")
 def home():
-    return "✅ AIChE Suez Chapter Bot is running!"
+    return "✅ AIChE Bot is running!"
