@@ -1,14 +1,16 @@
-﻿import logging
+import logging
 import os
 from telegram import Update, ReplyKeyboardMarkup
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
 from flask import Flask, request
 
 # ========= BOT TOKEN =========
-BOT_TOKEN = "8535335337:AAGUIzGQ1mjMnNVXNaxf-G0Ry_JDU-W3WEw"
+BOT_TOKEN = os.environ.get("BOT_TOKEN", "")
+if not BOT_TOKEN:
+    raise ValueError("BOT_TOKEN not set in environment variables!")
 
 # ⚠️ غيّر ده لاسم حسابك على PythonAnywhere
-PYTHONANYWHERE_USERNAME = "AmirEhab"
+PYTHONANYWHERE_USERNAME = os.environ.get("PA_USERNAME", "AmirEhab")
 WEBHOOK_URL = f"https://{PYTHONANYWHERE_USERNAME}.pythonanywhere.com/{BOT_TOKEN}"
 
 # ========= LOGGING =========
