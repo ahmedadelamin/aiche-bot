@@ -134,19 +134,47 @@ async def broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if user_id != ADMIN_ID:
         await update.message.reply_text("❌ مش مسموح لك بالأمر ده!")
         return
-    if not context.args:
-        await update.message.reply_text("📢 استخدام الأمر:\n/broadcast الرسالة اللي عايز تبعتها")
+        
+    message = ""
+    photo_id = None
+    document_id = None
+    
+    # Handle text or caption
+    if update.message.text and context.args:
+        message = " ".join(context.args)
+    elif update.message.caption:
+        # Extract everything after /broadcast in caption
+        caption = update.message.caption
+        if "/broadcast" in caption:
+            message = caption.split("/broadcast", 1)[1].strip()
+            
+    # Handle media
+    if update.message.photo:
+        photo_id = update.message.photo[-1].file_id
+    elif update.message.document:
+        document_id = update.message.document.file_id
+        
+    if not message and not photo_id and not document_id:
+        await update.message.reply_text("📢 استخدام الأمر:\n/broadcast الرسالة\nأو ابعت صورة/ملف واكتب في الـ caption:\n/broadcast رسالتك هنا")
         return
-    message = " ".join(context.args)
+        
     users = load_users()
     success, failed = 0, 0
     status_msg = await update.message.reply_text(f"⏳ جاري الإرسال لـ {len(users)} مستخدم...")
+    
     for uid in users:
         try:
-            await context.bot.send_message(chat_id=uid, text=f"📢 *رسالة من AIChE Suez:*\n\n{message}", parse_mode="Markdown")
+            formatted_msg = f"📢 *رسالة من AIChE Suez:*\n\n{message}" if message else "📢 *رسالة من AIChE Suez:*"
+            if photo_id:
+                await context.bot.send_photo(chat_id=uid, photo=photo_id, caption=formatted_msg, parse_mode="Markdown")
+            elif document_id:
+                await context.bot.send_document(chat_id=uid, document=document_id, caption=formatted_msg, parse_mode="Markdown")
+            else:
+                await context.bot.send_message(chat_id=uid, text=formatted_msg, parse_mode="Markdown")
             success += 1
         except Exception:
             failed += 1
+            
     await status_msg.edit_text(f"✅ تم الإرسال!\n\n👥 المستخدمين: {len(users)}\n✅ وصل: {success}\n❌ فشل: {failed}")
 
 async def users_count(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -242,8 +270,9 @@ def make_app():
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("broadcast", broadcast))
     app.add_handler(CommandHandler("users", users_count))
-    app.add_handler(MessageHandler(filters.Document.ALL | filters.PHOTO, handle_file))
-    app.add_handler(MessageHandler(filters.TEXT, handle_message))
+    # Allow media with captions to pass to command handlers if they contain commands
+    app.add_handler(MessageHandler((filters.Document.ALL | filters.PHOTO) & ~filters.COMMAND, handle_file))
+    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
     return app
 
 @flask_app.route(f"/{BOT_TOKEN}", methods=["POST"])
