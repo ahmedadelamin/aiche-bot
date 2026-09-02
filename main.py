@@ -11,7 +11,7 @@ BOT_TOKEN = os.environ.get("BOT_TOKEN", "")
 PYTHONANYWHERE_USERNAME = os.environ.get("PA_USERNAME", "AmirEhab")
 WEBHOOK_URL = f"https://{PYTHONANYWHERE_USERNAME}.pythonanywhere.com/{BOT_TOKEN}"
 ADMIN_ID = 1846962771
-USERS_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "users.json")
+USERS_FILE = "/home/AmirEhab/users.json"
 
 logging.basicConfig(format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO)
 logger = logging.getLogger(__name__)
