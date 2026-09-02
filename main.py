@@ -18,16 +18,23 @@ logger = logging.getLogger(__name__)
 
 # ========= USER STORAGE =========
 def load_users():
-    if os.path.exists(USERS_FILE):
-        with open(USERS_FILE, "r") as f:
-            return set(json.load(f))
+    try:
+        if os.path.exists(USERS_FILE):
+            with open(USERS_FILE, "r") as f:
+                return set(json.load(f))
+    except Exception as e:
+        logger.error(f"Error loading users: {e}")
     return set()
 
 def save_user(user_id):
-    users = load_users()
-    users.add(user_id)
-    with open(USERS_FILE, "w") as f:
-        json.dump(list(users), f)
+    try:
+        users = load_users()
+        if user_id not in users:
+            users.add(user_id)
+            with open(USERS_FILE, "w") as f:
+                json.dump(list(users), f)
+    except Exception as e:
+        logger.error(f"Error saving user: {e}")
 
 # ========= MENUS =========
 main_menu = [["Know AIChE"], ["AIChE Technical Products"], ["Academic"]]
