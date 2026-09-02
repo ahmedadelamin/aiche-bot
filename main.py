@@ -132,7 +132,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     if user_id != ADMIN_ID:
-        await update.message.reply_text("❌ مش مسموح لك بالأمر ده!")
+        await update.message.reply_text("❌ You are not authorized to use this command!")
         return
         
     message = ""
@@ -155,16 +155,16 @@ async def broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE):
         document_id = update.message.document.file_id
         
     if not message and not photo_id and not document_id:
-        await update.message.reply_text("📢 استخدام الأمر:\n/broadcast الرسالة\nأو ابعت صورة/ملف واكتب في الـ caption:\n/broadcast رسالتك هنا")
+        await update.message.reply_text("📢 Usage:\n/broadcast Your message here\nOr send a photo/document with caption:\n/broadcast Your message here")
         return
         
     users = load_users()
     success, failed = 0, 0
-    status_msg = await update.message.reply_text(f"⏳ جاري الإرسال لـ {len(users)} مستخدم...")
+    status_msg = await update.message.reply_text(f"⏳ Broadcasting to {len(users)} users...")
     
     for uid in users:
         try:
-            formatted_msg = f"📢 *رسالة من AIChE Suez:*\n\n{message}" if message else "📢 *رسالة من AIChE Suez:*"
+            formatted_msg = f"📢 *Message from AIChE Suez:*\n\n{message}" if message else "📢 *Message from AIChE Suez:*"
             if photo_id:
                 await context.bot.send_photo(chat_id=uid, photo=photo_id, caption=formatted_msg, parse_mode="Markdown")
             elif document_id:
@@ -175,14 +175,14 @@ async def broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE):
         except Exception:
             failed += 1
             
-    await status_msg.edit_text(f"✅ تم الإرسال!\n\n👥 المستخدمين: {len(users)}\n✅ وصل: {success}\n❌ فشل: {failed}")
+    await status_msg.edit_text(f"✅ Broadcast Complete!\n\n👥 Total Users: {len(users)}\n✅ Successful: {success}\n❌ Failed: {failed}")
 
 async def users_count(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_user.id != ADMIN_ID:
-        await update.message.reply_text("❌ مش مسموح لك!")
+        await update.message.reply_text("❌ You are not authorized!")
         return
     users = load_users()
-    await update.message.reply_text(f"👥 عدد المستخدمين: {len(users)}")
+    await update.message.reply_text(f"👥 Total Users: {len(users)}")
 
 async def handle_file(update: Update, context: ContextTypes.DEFAULT_TYPE):
     save_user(update.effective_user.id)
