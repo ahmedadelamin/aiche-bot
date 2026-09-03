@@ -270,41 +270,44 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("Please choose an option from the menu below.")
 
 # ========= FLASK =========
+import threading
 flask_app = Flask(__name__)
+tls = threading.local()
 
-def make_app():
-    """Create a fresh Application instance for each request"""
-    app = Application.builder().token(BOT_TOKEN).build()
-    app.add_handler(CommandHandler("start", start))
-    app.add_handler(CommandHandler("broadcast", broadcast))
-    app.add_handler(CommandHandler("users", users_count))
-    # Allow media with captions to pass to command handlers if they contain commands
-    app.add_handler(MessageHandler((filters.Document.ALL | filters.PHOTO) & ~filters.COMMAND, handle_file))
-    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
-    return app
+def get_app():
+    if not hasattr(tls, 'app'):
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        tls.loop = loop
+        
+        app = Application.builder().token(BOT_TOKEN).build()
+        app.add_handler(CommandHandler("start", start))
+        app.add_handler(CommandHandler("broadcast", broadcast))
+        app.add_handler(CommandHandler("users", users_count))
+        # Allow media with captions to pass to command handlers if they contain commands
+        app.add_handler(MessageHandler((filters.Document.ALL | filters.PHOTO) & ~filters.COMMAND, handle_file))
+        app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
+        
+        tls.app = app
+        loop.run_until_complete(app.initialize())
+    return tls.app, tls.loop
 
 @flask_app.route(f"/{BOT_TOKEN}", methods=["POST"])
 def webhook():
     data = request.get_json(force=True)
-    async def process():
-        app = make_app()
-        await app.initialize()
-        update = Update.de_json(data, app.bot)
-        await app.process_update(update)
-        await app.shutdown()
-    asyncio.run(process())
+    app, loop = get_app()
+    update = Update.de_json(data, app.bot)
+    loop.run_until_complete(app.process_update(update))
     return "OK", 200
 
 @flask_app.route("/set_webhook")
 def set_webhook():
+    app, loop = get_app()
     async def do_set():
-        app = make_app()
-        await app.initialize()
         await app.bot.set_webhook(url=WEBHOOK_URL)
         info = await app.bot.get_webhook_info()
-        await app.shutdown()
         return info.url
-    url = asyncio.run(do_set())
+    url = loop.run_until_complete(do_set())
     return f"✅ Webhook set!<br>URL: {url}"
 
 @flask_app.route("/")
