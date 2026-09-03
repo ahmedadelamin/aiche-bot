@@ -226,7 +226,16 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
             parse_mode="Markdown"
         )
     elif text == "Our Vision":
-        await update.message.reply_photo(IMAGE_FILE_IDS["our_vision"], caption="🚀 *Reforming Spark*\nEvery Evolution Starts with a Spark.", parse_mode="Markdown")
+        await update.message.reply_photo(
+            photo="AgACAgQAAxkBAAIFmmqZ16qj63QcOae7tGU7K0fWZrFiAAI0EWsb467RUPn800hMKH4bAQADAgADeQADPQQ",
+            caption=(
+                "🔭 *Our Vision — Break The Mold*\n\n"
+                "To redefine what a student chapter can be by creating a professional and supportive environment "
+                "where every member grows, every voice matters, every partnership creates value, "
+                "and every experience leaves a lasting impact."
+            ),
+            parse_mode="Markdown"
+        )
     elif text == "AIChE''s Official Accounts on Social Media":
         links = ("🌐 *Official AIChE Suez Links*\n\n🔗 [Website](https://aichesusc.org/)\n📘 [Facebook](https://www.facebook.com/AIChESUSC)\n💬 [Telegram](https://t.me/AIChESUSC)\n▶️ [YouTube](https://youtube.com/@AIChESUSC1)")
         await update.message.reply_text(links, parse_mode="Markdown", disable_web_page_preview=True)
