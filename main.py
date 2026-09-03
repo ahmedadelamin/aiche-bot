@@ -123,6 +123,7 @@ IMAGE_FILE_IDS = {
     "Brain++": "AgACAgQAAxkBAAIFr2qZ3lJ-hhbCdsh5TZCRBD4NrbbnAAKrEmsbwzzRUGMF0_5ZXE1DAQADAgADeQADPQQ",
     "sponsor": "AgACAgQAAxkBAANMaTarVTZt0lSfdnHziXmFVe05Tm0AAvkLaxuIRLFRC7g3mpsf9bEBAAMCAAN5AAM2BA",
     "HYSYS Course": "AgACAgQAAxkBAAIFrGqZ3Ej0-mKl0nv9oAzfximI_VPZAAI7EWsb467RUMDLhias_X7bAQADAgADeAADPQQ",
+    "Reforming Arena": "AgACAgQAAxkBAAIGHWqZ5Xd2UyJrz4uhlu1W_Sz5SQKkAAK0EmsbwzzRUMGJXH6H9r_5AQADAgADeAADPQQ",
 }
 
 def escape_markdown(text):
@@ -247,6 +248,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
             (IMAGE_FILE_IDS["Brain++"], "🧠 *Brain++*\nA two-day mega non-technical event."),
             (IMAGE_FILE_IDS["Career Fair"], "💼 *Visual Intelligence*\nOnline event covering multiple career paths."),
             (IMAGE_FILE_IDS["HYSYS Course"], "💻 *AIChE HYSYS Course*\nAn intensive 4-week in-person training program."),
+            (IMAGE_FILE_IDS["Reforming Arena"], "🏆 *AIChE Reforming Arena*\nA 3-week engineering competition for Petroleum Engineering undergraduates across Egypt — featuring 4 technical tracks and a 3-phase challenge."),
         ]
         for file_id, caption in events:
             await update.message.reply_photo(photo=file_id, caption=caption, parse_mode="Markdown")
