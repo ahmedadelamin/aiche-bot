@@ -122,6 +122,7 @@ IMAGE_FILE_IDS = {
     "AIChE Refining Diploma": "AgACAgQAAxkBAANDaTaprywhlqML1CbLpn1df1cv-l0AAvULaxuIRLFRlf5idOFYP38BAAMCAAN5AAM2BA",
     "Brain++": "AgACAgQAAxkBAANAaTapr2Y3ZvGgyX7_6WOniItU7M8AAvMLaxuIRLFRkg9aGyLAtJQBAAMCAAN5AAM2BA",
     "sponsor": "AgACAgQAAxkBAANMaTarVTZt0lSfdnHziXmFVe05Tm0AAvkLaxuIRLFRC7g3mpsf9bEBAAMCAAN5AAM2BA",
+    "HYSYS Course": "AgACAgQAAxkBAAIFrGqZ3Ej0-mKl0nv9oAzfximI_VPZAAI7EWsb467RUMDLhias_X7bAQADAgADeAADPQQ",
 }
 
 def escape_markdown(text):
@@ -240,7 +241,13 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         links = ("🌐 *Official AIChE Suez Links*\n\n🔗 [Website](https://aichesusc.org/)\n📘 [Facebook](https://www.facebook.com/AIChESUSC)\n💬 [Telegram](https://t.me/AIChESUSC)\n▶️ [YouTube](https://youtube.com/@AIChESUSC1)")
         await update.message.reply_text(links, parse_mode="Markdown", disable_web_page_preview=True)
     elif text == "AIChE''s Mega Events":
-        events = [(IMAGE_FILE_IDS["PGIE"], "🛢 *PGIE*\nA one-day technical exhibition held annually."), (IMAGE_FILE_IDS["AIChE Refining Diploma"], "🎓 *AIChE Refining Diploma*\nAn online 70+ hour diploma."), (IMAGE_FILE_IDS["Brain++"], "🧠 *Brain++*\nA two-day mega non-technical event."), (IMAGE_FILE_IDS["Career Fair"], "💼 *Visual Intelligence*\nOnline event covering multiple career paths.")]
+        events = [
+            (IMAGE_FILE_IDS["PGIE"], "🛢 *PGIE*\nA one-day technical exhibition held annually."),
+            (IMAGE_FILE_IDS["AIChE Refining Diploma"], "🎓 *AIChE Refining Diploma*\nAn online 70+ hour diploma."),
+            (IMAGE_FILE_IDS["Brain++"], "🧠 *Brain++*\nA two-day mega non-technical event."),
+            (IMAGE_FILE_IDS["Career Fair"], "💼 *Visual Intelligence*\nOnline event covering multiple career paths."),
+            (IMAGE_FILE_IDS["HYSYS Course"], "💻 *AIChE HYSYS Course*\nAn intensive 4-week in-person training program."),
+        ]
         for file_id, caption in events:
             await update.message.reply_photo(photo=file_id, caption=caption, parse_mode="Markdown")
     elif text == "AIChE''s Main Sponsor":
