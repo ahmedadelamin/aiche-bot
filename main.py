@@ -124,6 +124,7 @@ IMAGE_FILE_IDS = {
     "sponsor": "AgACAgQAAxkBAANMaTarVTZt0lSfdnHziXmFVe05Tm0AAvkLaxuIRLFRC7g3mpsf9bEBAAMCAAN5AAM2BA",
     "HYSYS Course": "AgACAgQAAxkBAAIFrGqZ3Ej0-mKl0nv9oAzfximI_VPZAAI7EWsb467RUMDLhias_X7bAQADAgADeAADPQQ",
     "Reforming Arena": "AgACAgQAAxkBAAIGHWqZ5Xd2UyJrz4uhlu1W_Sz5SQKkAAK0EmsbwzzRUMGJXH6H9r_5AQADAgADeAADPQQ",
+    "ME Gathering": "AgACAgQAAxkBAAIGOWqZ5y8u_oN8nGFZL1_eo12ABT3NAAK2EmsbwzzRUOzmTz-0oEX7AQADAgADeAADPQQ",
 }
 
 def escape_markdown(text):
@@ -249,6 +250,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
             (IMAGE_FILE_IDS["Career Fair"], "💼 *Visual Intelligence*\nOnline event covering multiple career paths."),
             (IMAGE_FILE_IDS["HYSYS Course"], "💻 *AIChE HYSYS Course*\nAn intensive 4-week in-person training program."),
             (IMAGE_FILE_IDS["Reforming Arena"], "🏆 *AIChE Reforming Arena*\nA 3-week engineering competition for Petroleum Engineering undergraduates across Egypt — featuring 4 technical tracks and a 3-phase challenge."),
+            (IMAGE_FILE_IDS["ME Gathering"], "🌍 *AIChE M.E. Gathering Event*\nA 3-week pan-Arab event for Chemical Engineering students from 15+ Arab universities — covering process engineering, simulation, and an NGL optimization challenge judged by industry experts."),
         ]
         for file_id, caption in events:
             await update.message.reply_photo(photo=file_id, caption=caption, parse_mode="Markdown")
