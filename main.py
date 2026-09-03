@@ -211,7 +211,20 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     elif text == "Who Are We?":
         await update.message.reply_photo(IMAGE_FILE_IDS["who_we_are"], caption="🌐 *Who We Are*\nAIChE stands for American Institute of Chemical Engineers.", parse_mode="Markdown")
     elif text == "Our Mission":
-        await update.message.reply_text("🎯 *Our Mission*\nTo empower students with technical knowledge and leadership skills.", parse_mode="Markdown")
+        await update.message.reply_text(
+            "🎯 *Our Mission*\n\n"
+            "🔹 *Develop People*\n"
+            "Provide members with continuous learning, real responsibility, and opportunities to lead.\n\n"
+            "🔹 *Create Meaningful Experiences*\n"
+            "Deliver valuable experiences that go beyond events and leave a real impact on participants.\n\n"
+            "🔹 *Build Professional Partnerships*\n"
+            "Create strong, professional relationships that open doors to training, collaboration, and industry opportunities.\n\n"
+            "🔹 *Build on a Sustainable System*\n"
+            "Improve and develop existing processes, responsibilities, documentation, and knowledge transfer to ensure continuity and accountability.\n\n"
+            "🔹 *Empower Innovation & Collaboration*\n"
+            "Give every member a voice, encourage new ideas, and connect people to create greater impact together.",
+            parse_mode="Markdown"
+        )
     elif text == "Our Vision":
         await update.message.reply_photo(IMAGE_FILE_IDS["our_vision"], caption="🚀 *Reforming Spark*\nEvery Evolution Starts with a Spark.", parse_mode="Markdown")
     elif text == "AIChE''s Official Accounts on Social Media":
