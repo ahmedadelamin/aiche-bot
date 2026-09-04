@@ -319,6 +319,13 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     else:
         await update.message.reply_text("Please choose an option from the menu below.", reply_markup=ReplyKeyboardMarkup(main_menu, resize_keyboard=True))
 
+async def unknown_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    save_user(update.effective_user.id)
+    await update.message.reply_text(
+        "⚠️ Unknown command. Please choose an option from the menu below.", 
+        reply_markup=ReplyKeyboardMarkup(main_menu, resize_keyboard=True)
+    )
+
 # ========= FLASK =========
 import threading
 flask_app = Flask(__name__)
@@ -335,6 +342,8 @@ def get_app():
         app.add_handler(CommandHandler("broadcast", broadcast))
         app.add_handler(CommandHandler("users", users_count))
         app.add_handler(CommandHandler("myid", myid))
+        # Handle all other unknown commands
+        app.add_handler(MessageHandler(filters.COMMAND, unknown_command))
         # Allow media with captions to pass to command handlers if they contain commands
         app.add_handler(MessageHandler((filters.Document.ALL | filters.PHOTO) & ~filters.COMMAND, handle_file))
         app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
