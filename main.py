@@ -147,12 +147,12 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def myid(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = update.effective_user
     save_user(user.id)
-    name = user.first_name or "User"
+    name = escape_markdown(user.first_name or "User")
     await update.message.reply_text(
         f"👤 *Your Info:*\n\n"
         f"🔹 *Name:* {name}\n"
         f"🔹 *Telegram ID:* `{user.id}`",
-        parse_mode="Markdown"
+        parse_mode="MarkdownV2"
     )
 
 async def broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE):
