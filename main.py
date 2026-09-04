@@ -348,16 +348,20 @@ def get_app():
         app.add_handler(MessageHandler((filters.Document.ALL | filters.PHOTO) & ~filters.COMMAND, handle_file))
         app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
         
-        tls.app = app
-        loop.run_until_complete(app.initialize())
+        try:
+            loop.run_until_complete(app.initialize())
+            tls.app = app
+        except Exception as e:
+            logger.error(f"Failed to initialize bot: {e}")
+            raise e
     return tls.app, tls.loop
 
 @flask_app.route(f"/{BOT_TOKEN}", methods=["POST"])
 def webhook():
-    data = request.get_json(force=True)
-    app, loop = get_app()
-    update = Update.de_json(data, app.bot)
     try:
+        data = request.get_json(force=True)
+        app, loop = get_app()
+        update = Update.de_json(data, app.bot)
         loop.run_until_complete(app.process_update(update))
     except Exception as e:
         logger.error(f"Error processing update: {e}")
