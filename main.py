@@ -317,7 +317,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         context.user_data.clear()
         await update.message.reply_text("Main menu 👇", reply_markup=ReplyKeyboardMarkup(main_menu, resize_keyboard=True))
     else:
-        await update.message.reply_text("Please choose an option from the menu below.")
+        await update.message.reply_text("Please choose an option from the menu below.", reply_markup=ReplyKeyboardMarkup(main_menu, resize_keyboard=True))
 
 # ========= FLASK =========
 import threading
