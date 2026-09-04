@@ -17,6 +17,9 @@ logging.basicConfig(format="%(asctime)s - %(name)s - %(levelname)s - %(message)s
 logger = logging.getLogger(__name__)
 
 # ========= USER STORAGE =========
+import threading
+user_lock = threading.Lock()
+
 def load_users():
     try:
         if os.path.exists(USERS_FILE):
@@ -28,11 +31,12 @@ def load_users():
 
 def save_user(user_id):
     try:
-        users = load_users()
-        if user_id not in users:
-            users.add(user_id)
-            with open(USERS_FILE, "w") as f:
-                json.dump(list(users), f)
+        with user_lock:
+            users = load_users()
+            if user_id not in users:
+                users.add(user_id)
+                with open(USERS_FILE, "w") as f:
+                    json.dump(list(users), f)
     except Exception as e:
         logger.error(f"Error saving user: {e}")
 
