@@ -42,7 +42,7 @@ def save_user(user_id):
 
 # ========= MENUS =========
 main_menu = [["Know AIChE"], ["AIChE Technical Products"], ["Academic"]]
-know_aiche_menu = [["Who Are We?"], ["Our Vision", "Our Mission"], ["AIChE''s Official Accounts on Social Media"], ["AIChE''s Mega Events"], ["AIChE''s Main Sponsor"], ["⬅️ Back", "🏠 Main Menu"]]
+know_aiche_menu = [["Who Are We?"], ["Our Vision", "Our Mission"], ["AIChE's Official Accounts on Social Media"], ["AIChE's Mega Events"], ["AIChE's Main Sponsor"], ["⬅️ Back", "🏠 Main Menu"]]
 tech_products_menu = [["ATB", "Spark"], ["Capsules", "Library"], ["⬅️ Back", "🏠 Main Menu"]]
 academic_levels_menu = [["Level 1", "Level 2"], ["Level 3", "Level 4"], ["⬅️ Back", "🏠 Main Menu"]]
 semester_menu = [["Semester 1"], ["Semester 2"], ["⬅️ Back", "🏠 Main Menu"]]
@@ -255,10 +255,10 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
             ),
             parse_mode="Markdown"
         )
-    elif text == "AIChE''s Official Accounts on Social Media":
+    elif text == "AIChE's Official Accounts on Social Media":
         links = ("🌐 *Official AIChE Suez Links*\n\n🔗 [Website](https://aichesusc.org/)\n📘 [Facebook](https://www.facebook.com/AIChESUSC)\n💬 [Telegram](https://t.me/AIChESUSC)\n▶️ [YouTube](https://youtube.com/@AIChESUSC1)")
         await update.message.reply_text(links, parse_mode="Markdown", disable_web_page_preview=True)
-    elif text == "AIChE''s Mega Events":
+    elif text == "AIChE's Mega Events":
         events = [
             (IMAGE_FILE_IDS["PGIE"], "🛢 *PGIE*\nA one-day technical exhibition held annually."),
             (IMAGE_FILE_IDS["AIChE Refining Diploma"], "🎓 *AIChE Refining Diploma*\nAn online 70+ hour diploma."),
@@ -271,7 +271,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         ]
         for file_id, caption in events:
             await update.message.reply_photo(photo=file_id, caption=caption, parse_mode="Markdown")
-    elif text == "AIChE''s Main Sponsor":
+    elif text == "AIChE's Main Sponsor":
         await update.message.reply_photo(IMAGE_FILE_IDS["sponsor"], caption="💼 *Our Sponsor*\nBGS Energy Services.", parse_mode="Markdown")
     elif text == "ATB":
         await update.message.reply_document(document="BQACAgQAAxkBAAMjaTam9YikGMM0dYXRPR1eCY6U160AAvYYAAKIRLFR2CJE1_8Eqf42BA")
