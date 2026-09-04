@@ -348,7 +348,10 @@ def webhook():
     data = request.get_json(force=True)
     app, loop = get_app()
     update = Update.de_json(data, app.bot)
-    loop.run_until_complete(app.process_update(update))
+    try:
+        loop.run_until_complete(app.process_update(update))
+    except Exception as e:
+        logger.error(f"Error processing update: {e}")
     return "OK", 200
 
 @flask_app.route("/set_webhook")
