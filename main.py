@@ -140,6 +140,17 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     save_user(user_id)
     await update.message.reply_text("Welcome to AIChE Suez Chapter Bot! 👋\nPlease choose an option below:", reply_markup=ReplyKeyboardMarkup(main_menu, resize_keyboard=True))
 
+async def myid(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user = update.effective_user
+    save_user(user.id)
+    name = user.first_name or "User"
+    await update.message.reply_text(
+        f"👤 *Your Info:*\n\n"
+        f"🔹 *Name:* {name}\n"
+        f"🔹 *Telegram ID:* `{user.id}`",
+        parse_mode="Markdown"
+    )
+
 async def broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     if user_id != ADMIN_ID:
@@ -319,6 +330,7 @@ def get_app():
         app.add_handler(CommandHandler("start", start))
         app.add_handler(CommandHandler("broadcast", broadcast))
         app.add_handler(CommandHandler("users", users_count))
+        app.add_handler(CommandHandler("myid", myid))
         # Allow media with captions to pass to command handlers if they contain commands
         app.add_handler(MessageHandler((filters.Document.ALL | filters.PHOTO) & ~filters.COMMAND, handle_file))
         app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
