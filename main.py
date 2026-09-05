@@ -212,6 +212,12 @@ async def users_count(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def handle_file(update: Update, context: ContextTypes.DEFAULT_TYPE):
     save_user(update.effective_user.id)
+    
+    # If the user is trying to broadcast media but didn't trigger the command handler
+    if update.message.caption and "/broadcast" in update.message.caption.lower():
+        if update.effective_user.id == ADMIN_ID:
+            return await broadcast(update, context)
+            
     if update.message.photo:
         await update.message.reply_text(f"🖼️ Image file_id:\n{update.message.photo[-1].file_id}")
     elif update.message.document:
@@ -342,10 +348,14 @@ def get_app():
         app.add_handler(CommandHandler("broadcast", broadcast))
         app.add_handler(CommandHandler("users", users_count))
         app.add_handler(CommandHandler("myid", myid))
+        
+        # Handle media first (it will internally check if the caption contains /broadcast)
+        app.add_handler(MessageHandler(filters.Document.ALL | filters.PHOTO, handle_file))
+        
         # Handle all other unknown commands
         app.add_handler(MessageHandler(filters.COMMAND, unknown_command))
-        # Allow media with captions to pass to command handlers if they contain commands
-        app.add_handler(MessageHandler((filters.Document.ALL | filters.PHOTO) & ~filters.COMMAND, handle_file))
+        
+        # Handle normal text
         app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
         
         try:
